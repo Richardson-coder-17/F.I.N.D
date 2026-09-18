@@ -7,7 +7,7 @@ gemini_llm = LLM(
         api_key=os.getenv("Gemini_api_key")
 )
 
-def run_fraud_investigation(csv_path: str = "transactions.csv"):
+def run_fraud_investigation(csv_path: str = "default.csv"):
     # Agent 1: Network Investigator
     graph_agent = Agent(
         role="Network Graph Investigator",
