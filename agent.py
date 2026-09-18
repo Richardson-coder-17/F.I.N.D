@@ -1,49 +1,51 @@
 import os
 from crewai import Agent, Task, Crew, Process, LLM
-from tools import analyze_fraud_network
+from tools import analyze_fraud_network_tool
 
-gemini_llm = LLM(
+def get_llm():
+    api_key = os.getenv("Gemini_api_key")
+    return LLM(
         model="gemini/gemini-3.1-flash-lite",
-        api_key=os.getenv("Gemini_api_key")
-)
+        api_key=api_key
+    )
 
-def run_fraud_investigation(csv_path: str = "default.csv"):
-    # Agent 1: Network Investigator
-    graph_agent = Agent(
-        role="Network Graph Investigator",
-        goal="Identify hidden connections, shared devices, and multi-hop funding loops in financial logs.",
-        backstory="An expert forensic analyst specializing in graph analysis and fraud ring discovery.",
-        tools=[analyze_fraud_network],
-        llm=gemini_llm,
+def run_fraud_investigation(csv_path: str):
+    llm = get_llm()
+
+    network_analyst = Agent(
+        role="Senior Financial Network Analyst",
+        goal="Extract topological anomalies, circular loops, and smurfing funnels from transaction data.",
+        backstory="Expert in forensic graph analysis, mapping multi-hop money laundering networks and shared device/IP infrastructure.",
+        tools=[analyze_fraud_network_tool],
+        llm=llm,
         verbose=True
     )
 
-    # Agent 2: Compliance Specialist
-    compliance_agent = Agent(
-        role="Financial Crime & SAR Specialist",
-        goal="Synthesize network findings into an official Suspicious Activity Report (SAR).",
-        backstory="A senior compliance officer who drafts regulatory reports with evidence trails.",
-        llm=gemini_llm,
+    compliance_officer = Agent(
+        role="Chief AML Compliance Officer",
+        goal="Synthesize network findings into an official regulatory Suspicious Activity Report (SAR).",
+        backstory="Former regulatory investigator specialized in FinCEN SAR drafting, risk assessment, and action recommendations.",
+        llm=llm,
         verbose=True
     )
 
-    # Tasks
-    task_investigate = Task(
-        description=f"Analyze the dataset at '{csv_path}' using the Network Graph Tool. Identify all shared infrastructure and flagged clusters.",
-        expected_output="Detailed list of connected accounts, shared IPs, and suspicious cluster nodes.",
-        agent=graph_agent
+    task_analyze = Task(
+        description=f"Analyze the financial transaction network in '{csv_path}' using the Analyze Fraud Network Tool. Identify high-risk nodes, smurfing targets, and circular money flows.",
+        expected_output="Detailed breakdown of network topology, flagged accounts, and identified laundering patterns.",
+        agent=network_analyst
     )
 
-    task_sar_report = Task(
-        description="Convert the network investigation findings into a formal Suspicious Activity Report (SAR) detailing: 1. Executive Summary, 2. Identified Fraud Ring, 3. Evidence Matrix, and 4. Recommended Action (Freeze/Flag).",
-        expected_output="A structured markdown SAR report.",
-        agent=compliance_agent
+    task_report = Task(
+        description="Review the analyst's network findings and generate a formal Suspicious Activity Report (SAR) in Markdown format. Include Executive Summary, Flagged Entities, Detected Patterns, and Recommended Actions.",
+        expected_output="Comprehensive Suspicious Activity Report (SAR) formatted in Markdown.",
+        agent=compliance_officer
     )
 
     crew = Crew(
-        agents=[graph_agent, compliance_agent],
-        tasks=[task_investigate, task_sar_report],
-        process=Process.sequential
+        agents=[network_analyst, compliance_officer],
+        tasks=[task_analyze, task_report],
+        process=Process.sequential,
+        verbose=True
     )
 
     return crew.kickoff()

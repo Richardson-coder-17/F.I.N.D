@@ -1,9 +1,16 @@
-crewai
-crewai-tools
-streamlit
-pandas
-networkx
-matplotlib
-python-dotenv
-duckduckgo-search
-reportlab
+# UI, Dashboard & Interactive Visuals
+streamlit>=1.35.0
+pyvis>=0.3.1
+matplotlib>=3.8.0
+
+# Graph Engine & Data Processing
+networkx>=3.2.1
+pandas>=2.2.0
+numpy>=1.26.0
+
+# Multi-Agent Framework & Gemini API Integration
+crewai>=0.100.0
+google-genai>=0.1.0
+crewai[google-genai]>=0.100.0
+python-dotenv>=1.0.1
+

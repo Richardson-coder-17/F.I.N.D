@@ -1,11 +1,10 @@
 import streamlit as st
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
-import networkx as nx
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
-from tools import build_fraud_graph
+from tools import build_fraud_graph, analyze_fraud_network, generate_interactive_graph_html
 from agent import run_fraud_investigation
 
 load_dotenv()
@@ -20,7 +19,7 @@ st.sidebar.header("⚙️ Configuration")
 csv_file = st.sidebar.file_uploader("Upload Transaction CSV", type=["csv"])
 
 # Default fallback dataset generator
-DEFAULT_CSV = "transactions.csv"
+DEFAULT_CSV = "default.csv"
 if not os.path.exists(DEFAULT_CSV):
     sample_df = pd.DataFrame([
         {"tx_id": "TX101", "sender_id": "ACC_101", "receiver_id": "ACC_102", "amount": 5000, "ip_address": "192.168.1.1", "device_id": "DEV_88"},
@@ -44,29 +43,22 @@ with col1:
     df = pd.read_csv(target_csv)
     st.dataframe(df, use_container_width=True)
 
-    st.subheader("🌐 Entity Network Topology")
+    st.subheader("🌐 Interactive Network Topology")
+    st.caption("💡 Click and drag nodes to inspect connections; scroll to zoom.")
     G = build_fraud_graph(target_csv)
     
-    # Render Matplotlib Network Graph
-    fig, ax = plt.subplots(figsize=(8, 5))
-    pos = nx.spring_layout(G, seed=42)
+    # Run graph analysis to detect suspicious nodes
+    suspicious_nodes, _ = analyze_fraud_network(G)
     
-    # Node Coloring: Red for IPs/Devices, Blue for Accounts
-    color_map = ['#ff4b4b' if str(node).startswith(("IP:", "DEV:")) else '#1c83e1' for node in G.nodes()]
-    
-    nx.draw_networkx_nodes(G, pos, node_color=color_map, node_size=700, ax=ax)
-    nx.draw_networkx_edges(G, pos, edge_color='#cccccc', ax=ax)
-    nx.draw_networkx_labels(G, pos, font_size=8, font_color='white', font_weight='bold', ax=ax)
-    ax.set_facecolor('#0e1117')
-    fig.patch.set_facecolor('#0e1117')
-    plt.axis('off')
-    st.pyplot(fig)
+    # Render Interactive Physics Graph
+    html_graph = generate_interactive_graph_html(G, suspicious_nodes=suspicious_nodes)
+    components.html(html_graph, height=540, scrolling=False)
 
 with col2:
     st.subheader("🤖 Autonomous Investigation")
     
     if st.button("Run Multi-Agent Investigation", type="primary", use_container_width=True):
-        if not os.getenv("GEMINI_API_KEY"):
+        if not os.getenv("GEMINI_API_KEY") and not os.getenv("Gemini_api_key"):
             st.error("Missing GEMINI_API_KEY! Please set it in your .env file.")
         else:
             with st.spinner("Agents Analyzing Graph Topology & Formulating SAR..."):
