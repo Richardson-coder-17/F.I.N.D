@@ -1,0 +1,9 @@
+crewai
+crewai-tools
+streamlit
+pandas
+networkx
+matplotlib
+python-dotenv
+duckduckgo-search
+reportlab
