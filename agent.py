@@ -3,7 +3,7 @@ from crewai import Agent, Task, Crew, Process, LLM
 from tools import analyze_fraud_network_tool
 
 def get_llm():
-    api_key = os.getenv("Gemini_api_key")
+    api_key = os.getenv("GEMINI_API_KEY")
     return LLM(
         model="gemini/gemini-3.1-flash-lite",
         api_key=api_key
