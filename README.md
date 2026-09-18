@@ -111,7 +111,7 @@ git clone https://github.com/Richardson-coder-17/F.I.N.D.git
 cd F.I.N.D
 
 # Create and activate virtual environment
-python -m venv .venv
+py -3.11 -m venv .venv
 # On Windows:
 .venv\Scripts\activate
 # On macOS/Linux:
